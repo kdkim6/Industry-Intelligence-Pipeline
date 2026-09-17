@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Industry Intelligence Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#F4F5F7;
+  --panel:#FFFFFF;
+  --ink:#151A23;
+  --ink-soft:#4B5566;
+  --line:#DDE1E7;
+  --line-soft:#E8EAEE;
+  --navy:#1E3A5F;
+  --navy-deep:#132A45;
+  --amber:#B9791F;
+  --amber-bg:#FBF1DF;
+  --green:#2E6B4F;
+  --green-bg:#E7F2EC;
+  --red:#A6402A;
+  --red-bg:#FBEAE4;
+  --radius:10px;
+}
+:root[data-theme="dark"]{
+  --bg:#11151C;
+  --panel:#181D26;
+  --ink:#EDF0F4;
+  --ink-soft:#A7B0BF;
+  --line:#2A303C;
+  --line-soft:#232935;
+  --navy:#6C93BE;
+  --navy-deep:#8FB0D6;
+  --amber:#E0AC55;
+  --amber-bg:#3A2E15;
+  --green:#7ABE9C;
+  --green-bg:#153224;
+  --red:#E08A6F;
+  --red-bg:#3A2019;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+code,.mono,.badge,.cite,.tag,input[type=text].mono-field{font-family:"IBM Plex Mono",monospace;}
+a{color:var(--navy);}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-0.01em;margin:0 0 6px 0;}
+.app{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px;flex-wrap:wrap;}
+.masthead .brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:38px;height:38px;border-radius:8px;background:linear-gradient(155deg,var(--navy),var(--navy-deep));display:flex;align-items:center;justify-content:center;color:#fff;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;flex:none;}
+.brand h1{font-size:19px;margin:0;}
+.brand p{margin:2px 0 0;color:var(--ink-soft);font-size:13px;}
+
+/* Stepper */
+.stepper{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;overflow-x:auto;margin-bottom:22px;}
+.step-btn{flex:1;min-width:118px;display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:8px;border:none;background:transparent;color:var(--ink-soft);cursor:pointer;text-align:left;font-family:inherit;}
+.step-btn .n{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.03em;}
+.step-btn .t{font-size:13px;font-weight:500;color:var(--ink);}
+.step-btn.active{background:var(--navy);}
+.step-btn.active .n,.step-btn.active .t{color:#fff;}
+.step-btn.done .n{color:var(--green);}
+.step-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;}
+.card h2{font-size:16px;}
+.card > .desc{color:var(--ink-soft);font-size:13.5px;margin-bottom:16px;max-width:70ch;}
+.section-label{display:inline-block;font-size:11px;letter-spacing:.04em;color:var(--navy);background:var(--line-soft);border-radius:5px;padding:3px 8px;margin-bottom:10px;font-weight:600;}
+
+label.field-label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:500;}
+input[type=text],input[type=url],input[type=number],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);
+  font-family:inherit;font-size:13.5px;
+}
+textarea{resize:vertical;min-height:56px;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--navy);outline-offset:1px;}
+.row{display:flex;gap:14px;flex-wrap:wrap;}
+.row > *{flex:1;min-width:180px;}
+
+button{font-family:inherit;cursor:pointer;}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13.5px;font-weight:600;}
+.btn:hover{background:var(--navy-deep);}
+.btn.big{padding:14px 26px;font-size:15px;border-radius:9px;}
+.btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--line);}
+.btn.ghost:hover{background:var(--line-soft);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+
+.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:6px;}
+.upload-box{border:1.5px dashed var(--line);border-radius:9px;padding:16px;text-align:center;background:var(--bg);}
+.upload-box h4{font-size:13px;margin-bottom:4px;}
+.upload-box p{font-size:11.5px;color:var(--ink-soft);margin:0 0 10px;}
+.upload-box input[type=file]{font-size:11.5px;width:100%;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+th{font-size:11px;text-transform:none;color:var(--ink-soft);font-weight:600;border-bottom:1.5px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+.table-wrap{overflow-x:auto;}
+
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--navy);color:#fff;border-radius:5px;padding:2px 7px;font-size:11px;font-weight:600;}
+.badge.outline{background:transparent;border:1px solid var(--navy);color:var(--navy);}
+.cite{display:inline-flex;background:var(--amber-bg);color:var(--amber);border:1px solid #E8CE9E;border-radius:5px;padding:1px 7px;font-size:11.5px;cursor:pointer;font-weight:500;}
+:root[data-theme="dark"] .cite{border-color:#5b4623;}
+.cite:hover{filter:brightness(0.95);text-decoration:underline;}
+.tag{font-size:10.5px;padding:2px 7px;border-radius:5px;background:var(--line-soft);color:var(--ink-soft);}
+.tag.fact{background:var(--green-bg);color:var(--green);}
+.tag.calc{background:var(--amber-bg);color:var(--amber);}
+.tag.interp{background:var(--line-soft);color:var(--ink-soft);}
+.tag.gap{background:var(--red-bg);color:var(--red);}
+
+.candidate{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:var(--bg);}
+.candidate .head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.candidate .excerpt{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin:6px 0;border-left:2px solid var(--line);padding-left:10px;}
+.candidate label.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;cursor:pointer;}
+.candidate .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:8px;}
+.candidate .fields label{font-size:11px;color:var(--ink-soft);display:block;margin-bottom:3px;}
+.candidate .fields input{padding:6px 8px;font-size:12.5px;}
+.no-candidates{font-size:13px;color:var(--ink-soft);padding:10px;background:var(--red-bg);border-radius:7px;border:1px solid #EAD2C7;}
+
+.exec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:10px 0 4px;}
+.exec-card{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:14px 16px;}
+.exec-card .k{font-size:11px;color:var(--ink-soft);margin-bottom:4px;}
+.exec-card .v{font-size:15px;font-weight:600;margin-bottom:6px;}
+
+.progressbar{height:6px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-top:4px;}
+.progressbar > div{height:100%;background:var(--navy);}
+
+.modal-back{position:fixed;inset:0;background:rgba(10,14,20,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:20px;}
+.modal-back.open{display:flex;}
+.modal{background:var(--panel);border-radius:12px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;padding:22px 24px;border:1px solid var(--line);}
+.modal h3{font-size:15px;}
+.modal .close{float:right;background:none;border:none;color:var(--ink-soft);font-size:20px;line-height:1;cursor:pointer;}
+.evidence-excerpt{background:var(--amber-bg);border:1px solid #E8CE9E;border-radius:7px;padding:12px 14px;font-size:13px;margin-top:10px;font-style:italic;}
+:root[data-theme="dark"] .evidence-excerpt{border-color:#5b4623;}
+
+.gap-toolbar{display:flex;gap:8px;margin-bottom:10px;}
+.small{font-size:12px;color:var(--ink-soft);}
+.hr{border:none;border-top:1px solid var(--line-soft);margin:18px 0;}
+.brief-header{border-bottom:2px solid var(--navy);padding-bottom:14px;margin-bottom:18px;}
+.brief-header .co{font-size:23px;font-weight:700;}
+.brief-header .meta{color:var(--ink-soft);font-size:13px;margin-top:4px;}
+.brief-section h3{font-size:15px;margin-top:26px;border-bottom:1px solid var(--line-soft);padding-bottom:8px;}
+.discrepancy{background:var(--red-bg);border:1px solid #EAD2C7;border-radius:7px;padding:12px 14px;margin:10px 0;font-size:13px;}
+.discrepancy b{color:var(--red);}
+
+footer.note{margin-top:26px;font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line-soft);padding-top:14px;}
+@media print{
+  .stepper,.btn-row,.no-print{display:none !important;}
+  body{background:#fff;}
+  .card{border:none;padding:0;margin-bottom:14px;}
+  .app{max-width:100%;padding:0;}
+}
+::selection{background:var(--amber-bg);}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<div class="modal-back" id="evidenceModalBack">
+  <div class="modal">
+    <button class="close" id="evidenceClose">&times;</button>
+    <h3>Evidence</h3>
+    <div id="evidenceBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================= STATE ============================= */
+const STEPS = ["Company","Industry / NAICS","Sources","Analyze","Industry Brief","Export"];
+
+const state = {
+  step: 0,
+  company: "Chipotle Mexican Grill",
+  sources: [],           // {id,title,publisher,year,filename,type,category,url,pageCount,pages:[{num,text}],fullText}
+  naicsMode: "auto",     // auto | manual
+  naics: null,           // computed or manual object
+  candidates: null,      // {size:[...], growth:[...], ...}
+  extraGaps: [],         // user-added gap rows
+  briefGenerated: false,
+  briefDate: null
+};
+
+let nextSourceNum = 1;
+
+/* ===================== NAICS REFERENCE LIBRARY =====================
+   Short, factual definitional excerpts adapted from the U.S. Census
+   Bureau's 2022 NAICS Manual (public reference descriptions). Used as
+   a fallback citation only when the user has not uploaded their own
+   Census/NAICS documentation. */
+const NAICS_REF = {
+  "722513": {
+    title: "Limited-Service Restaurants",
+    def: "Establishments primarily engaged in providing food services (except snack and nonalcoholic beverage bars) where patrons generally order or select items and pay before eating. Food and drink may be consumed on premises, taken out, or delivered. Includes fast-food and fast-casual/counter-service restaurants.",
+    keywords: ["fast casual","quick service","counter service","order at the counter","pay before eating","limited service","fast food","drive-thru","drive thru","qsr","order counter","self-serve line","assembly-line"]
+  },
+  "722511": {
+    title: "Full-Service Restaurants",
+    def: "Establishments primarily engaged in providing food services to patrons who order and are served while seated (table/wait service) and pay after eating.",
+    keywords: ["full service","full-service","waiter","waitress","table service","fine dining","sit-down","pay after eating","reservation"]
+  },
+  "722515": {
+    title: "Snack and Nonalcoholic Beverage Bars",
+    def: "Establishments primarily engaged in preparing and/or serving a specialty snack (such as ice cream, frozen yogurt, cookies, or popcorn) or nonalcoholic beverages (such as coffee, juice, or smoothies) for consumption on or near the premises; patrons order and pay before eating.",
+    keywords: ["snack bar","ice cream","frozen yogurt","coffee shop","juice bar","smoothie","cafe","donut shop"]
+  },
+  "722320": {
+    title: "Caterers",
+    def: "Establishments primarily engaged in providing single-event-based food services for events with a specific date, location, and clientele, either at the customer's site or a special event site rather than a stand-alone facility.",
+    keywords: ["catering","caterer","event-based food","banquet service"]
+  }
+};
+
+/* ============================= SIGNAL DEFINITIONS ============================= */
+const SIGNALS = [
+  {key:"size", label:"Industry Size & 5-Year Growth", short:"Industry size", keywords:["industry revenue","market size","estimated at $","total industry revenue","industry is valued","market value","industry generates","estimated to be worth","industry size"]},
+  {key:"growth", label:"Growth Trajectory", short:"5-year growth", keywords:["cagr","annual growth rate","forecast to grow","expected to grow","annualized growth","growth rate of","compound annual","five-year","5-year","projected to increase","projected to decline"]},
+  {key:"competitors", label:"Major Competitors & Market Share", short:"Market leader", keywords:["market share","% of industry revenue","leading company","largest player","top competitor","industry leader","accounts for approximately","dominant player","market leader"]},
+  {key:"regulatory", label:"Regulatory / Compliance Pressure", short:"Regulatory pressure", keywords:["minimum wage","food safety","fda","labor law","osha","regulation","compliance","labeling requirement","environmental regulation","health code","paid sick leave","data privacy","overtime rule","immigration enforcement","tariff"]},
+  {key:"supply", label:"Supply Chain Concentration / Fragility", short:"Supply chain", keywords:["supplier","supply chain","commodity price","sourcing","vendor","logistics","input cost","shortage","avocado","beef price","ingredient cost","distribution center","single-source","concentration of suppliers"]},
+  {key:"customer", label:"Customer Concentration / Fragmentation", short:"Customer structure", keywords:["consumer","customer base","demographic","millennial","gen z","loyalty program","business customers","b2b","distributor","government contract","household","foot traffic"]},
+  {key:"trend", label:"Biggest 5-Year Trend", short:"Biggest trend", keywords:["trend","emerging","shift toward","growing demand","increasingly popular","digital ordering","delivery growth","plant-based","health-conscious","automation","mobile app","loyalty app","ghost kitchen"]},
+  {key:"threat", label:"Biggest Threat", short:"Biggest threat", keywords:["threat","risk factor","headwind","challenge","competitive pressure","disruption","margin pressure","labor shortage","inflation","input cost volatility","litigation risk"]}
+];
+
+/* ============================= UTIL ============================= */
+function esc(s){return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function allSourceText(){return state.sources.map(s=>s.fullText).join("\n\n");}
+
+function moneyGuess(text){
+  const m = text.match(/\$\s?([\d,]+(?:\.\d+)?)\s?(billion|million|bn|mm|b\b|m\b)/i);
+  if(!m) return {amount:"",unit:""};
+  let unit = m[2].toLowerCase();
+  unit = (unit[0]==='b') ? "billion (USD)" : "million (USD)";
+  return {amount: m[1].replace(/,/,""), unit};
+}
+function pctGuess(text){
+  const m = text.match(/(\d{1,3}(?:\.\d+)?)\s?%/);
+  return m ? m[1] : "";
+}
+function yearGuess(text){
+  const m = text.match(/\b(20[0-3]\d)\b/);
+  return m ? m[1] : "";
+}
+/* ---- Competitor / market-share context classification ----
+   Rather than assigning a percentage to a company from a single fixed
+   regex, every percentage in a candidate sentence is scored against
+   surrounding language: phrases that positively indicate market/industry
+   share vs. phrases that indicate a different metric (same-store sales,
+   revenue growth, margin, etc.). A percentage is only treated as market
+   share when share-language sits close to it and no conflicting metric
+   language sits closer; otherwise it is reported as unverifiable rather
+   than guessed. */
+const SHARE_POSITIVE_PHRASES = [
+  "market share","industry share","share of the market","share of industry revenue",
+  "share of total industry revenue","% of industry revenue","% of the market",
+  "share of the industry","share of total revenue","of industry sales","of the u.s. market",
+  "market-leading share","commands the largest share","leading share of","share of consumer spending"
+];
+const SHARE_NEGATIVE_PHRASES = [
+  "same-store sales","same store sales","comparable sales","comp sales","comparable-store sales",
+  "comparable restaurant sales","same-restaurant sales","revenue growth","sales growth",
+  "yoy growth","year-over-year growth","profit margin","operating margin","gross margin",
+  "net margin","ebitda margin","menu price increase","price increase","foot traffic",
+  "unit growth","store count growth","guest traffic","transaction growth","annual growth rate",
+  "cagr","forecast to grow","expected to grow","unemployment rate","tax rate","interest rate",
+  "discount rate","same-store sales growth","comp-store sales","cost increase","wage increase"
+];
+const SHARE_LINK_VERBS = ["holds","holding","has","accounts for","commands","commanding","controls",
+  "captures","maintains","represents","owns","claims","posts","reports","held","commanded","captured"];
+const COMPETITIVE_CONTEXT_KEYWORDS = ["market share","leading company","largest player","top competitor",
+  "industry leader","dominant player","market leader","major companies","competitive landscape",
+  "leading companies","key competitor","primary competitor"];
+const NAME_STOPWORDS = new Set(["The","This","That","These","Those","It","In","On","At","For","With",
+  "According","Overall","However","Although","Meanwhile","Industry","Company","Companies","Overview",
+  "Total","Estimated","Approximately","Currently","Additionally","Furthermore","Moreover","Therefore",
+  "Despite","Across","Within","Between","Among","Some","Many","Most","Several","Other","Others","US",
+  "United","North","Source","Figure","Table","Exhibit","IBISWorld","MarketResearch","Census"]);
+
+function findAllPercents(text){
+  const re = /(\d{1,3}(?:\.\d+)?)\s?%/g;
+  const out = []; let m;
+  while((m = re.exec(text))){ out.push({value:m[1], index:m.index, length:m[0].length}); }
+  return out;
+}
+function findCompanyPhrases(text){
+  const re = /\b([A-Z][A-Za-z&'.]+(?:\s+[A-Z][A-Za-z&'.]+){0,3})\b/g;
+  const out = []; let m;
+  while((m = re.exec(text))){
+    const phrase = m[1].trim();
+    const firstWord = phrase.split(" ")[0].replace(/[^A-Za-z]/g,"");
+    if(NAME_STOPWORDS.has(firstWord)) continue;
+    if(phrase.length<3 || phrase.length>40) continue;
+    out.push({name:phrase, index:m.index});
+  }
+  return out;
+}
+function nearestPhrase(list, idx, maxDist){
+  let best=null, bestDist=Infinity;
+  for(const p of list){
+    const d = Math.abs(p.index - idx);
+    if(d<bestDist && d<=maxDist){ bestDist=d; best=p; }
+  }
+  return best;
+}
+function phraseNear(text, idx, phrases, windowChars){
+  const start = Math.max(0, idx-windowChars), end = Math.min(text.length, idx+windowChars);
+  const win = text.slice(start,end).toLowerCase();
+  return phrases.filter(p=>win.includes(p));
+}
+function classifySharePercent(sentence, pct, companyPhrases){
+  const idx = pct.index;
+  const lower = sentence.toLowerCase();
+  const negNear = phraseNear(sentence, idx, SHARE_NEGATIVE_PHRASES, 55);
+  const posNear = phraseNear(sentence, idx, SHARE_POSITIVE_PHRASES, 65);
+  const posAnywhere = SHARE_POSITIVE_PHRASES.filter(p=>lower.includes(p));
+  const negAnywhere = SHARE_NEGATIVE_PHRASES.filter(p=>lower.includes(p));
+
+  let type, confidence;
+  if(negNear.length>0){ type = "other_metric"; confidence = "n/a"; }
+  else if(posNear.length>0){ type = "market_share"; confidence = "high"; }
+  else if(posAnywhere.length>0){ type = "market_share"; confidence = "medium"; }
+  else { type = "ambiguous"; confidence = "low"; } // covers negAnywhere-but-not-near, and no signal at all
+
+  const company = nearestPhrase(companyPhrases, idx, 90);
+  let linked = false;
+  if(company){
+    const lo = Math.min(company.index, idx), hi = Math.max(company.index, idx);
+    const between = sentence.slice(lo, hi).toLowerCase();
+    linked = SHARE_LINK_VERBS.some(v=>between.includes(v));
+  }
+  if(type==="market_share"){
+    if(!company){ confidence = "low"; }
+    else if(!linked && confidence==="high"){ confidence = "medium"; }
+    else if(!linked && confidence==="medium"){ confidence = "low"; }
+  }
+  return {type, confidence, company: company?company.name:null, linked};
+}
+
+function extractCompetitorCandidates(){
+  const found = [];
+  const seen = new Set();
+  outer:
+  for(const src of state.sources){
+    for(const pg of src.pages){
+      const sentences = splitSentences(pg.text);
+      for(const sent of sentences){
+        const lower = sent.toLowerCase();
+        const hasContextKw = COMPETITIVE_CONTEXT_KEYWORDS.some(k=>lower.includes(k));
+        const percents = findAllPercents(sent);
+        const companyPhrases = findCompanyPhrases(sent);
+        if(percents.length===0 && !hasContextKw) continue;
+
+        if(percents.length>0){
+          for(const pct of percents){
+            const cls = classifySharePercent(sent, pct, companyPhrases);
+            if(cls.type==="other_metric" && !hasContextKw) continue;
+            const key = sent.slice(0,50)+"|"+pct.value;
+            if(seen.has(key)) continue;
+            seen.add(key);
+
+            let shareStatus, shareValue, warning, warningText;
+            if(cls.type==="market_share" && cls.confidence!=="low"){
+              shareStatus = "verified"; shareValue = pct.value;
+              warning = !cls.linked;
+              warningText = !cls.linked ? "Percentage and company name were not explicitly linked by a phrase such as \u201cholds\u201d or \u201caccounts for\u201d \u2014 verify the connection against the excerpt." : "";
+            } else {
+              shareStatus = "unable"; shareValue = "";
+              warning = true;
+              warningText = cls.type==="other_metric"
+                ? "This percentage appears to describe a different metric (sales growth, comparable-store sales, or margin), not market share."
+                : "Surrounding text does not clearly indicate this percentage represents market, industry, or revenue share \u2014 review manually.";
+            }
+
+            found.push({
+              id: uid(), sourceId: src.id, page: pg.num, keyword: "market-share-context",
+              excerpt: sent.length>320 ? sent.slice(0,320)+"\u2026" : sent,
+              included: shareStatus==="verified" && found.filter(f=>f.fields && f.fields.shareStatus==="verified").length<3,
+              fields: { company: cls.company || "", share: shareValue, shareStatus, confidence: cls.confidence, year: yearGuess(sent) },
+              warning, warningText
+            });
+            if(found.length>=10) continue outer;
+          }
+        } else if(hasContextKw){
+          const key = sent.slice(0,50)+"|noPct";
+          if(seen.has(key)) continue;
+          seen.add(key);
+          const company = companyPhrases[0];
+          found.push({
+            id: uid(), sourceId: src.id, page: pg.num, keyword: "competitive-context",
+            excerpt: sent.length>320 ? sent.slice(0,320)+"\u2026" : sent,
+            included: false,
+            fields: { company: company?company.name:"", share:"", shareStatus:"unable", confidence:"low", year: yearGuess(sent) },
+            warning: true, warningText: "No percentage found in this excerpt \u2014 competitive mention only, market share not stated."
+          });
+        }
+      }
+      if(found.length>=10) break outer;
+    }
+  }
+  return found;
+}
+
+/* ============================= PDF / TXT EXTRACTION ============================= */
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js";
+}
+
+async function extractPdf(file){
+  const buf = await file.arrayBuffer();
+  const doc = await pdfjsLib.getDocument({data:buf}).promise;
+  const pages = [];
+  for(let i=1;i<=doc.numPages;i++){
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    const text = content.items.map(it=>it.str).join(" ").replace(/\s+/g," ").trim();
+    pages.push({num:i, text});
+  }
+  return pages;
+}
+async function extractTxt(file){
+  const text = await file.text();
+  // split into pseudo-pages of ~3500 chars so citations can still say "p. N" (approximate)
+  const chunks = [];
+  const size = 3500;
+  for(let i=0;i<text.length;i+=size){
+    chunks.push(text.slice(i, i+size));
+  }
+  return chunks.map((t,idx)=>({num:idx+1, text:t.replace(/\s+/g," ").trim()}));
+}
+
+async function handleFileUpload(file, category, publisherDefault){
+  const isPdf = /\.pdf$/i.test(file.name);
+  let pages = [];
+  try{
+    pages = isPdf ? await extractPdf(file) : await extractTxt(file);
+  }catch(e){
+    pages = [{num:1, text:""}];
+  }
+  const fullText = pages.map(p=>p.text).join("\n");
+  const titleGuess = file.name.replace(/\.(pdf|txt)$/i,"").replace(/[_-]+/g," ").trim();
+  const src = {
+    id: "S"+(nextSourceNum++),
+    title: titleGuess || file.name,
+    publisher: publisherDefault,
+    year: yearGuess(fullText) || yearGuess(file.name) || "",
+    filename: file.name,
+    type: category,
+    category,
+    url: "",
+    pageCount: pages.length,
+    pages,
+    fullText
+  };
+  state.sources.push(src);
+  return src;
+}
+
+/* ============================= NAICS DETERMINATION ============================= */
+function findKeywordHit(text, kw){
+  const idx = text.toLowerCase().indexOf(kw);
+  if(idx===-1) return null;
+  const start = Math.max(0, idx-90);
+  const end = Math.min(text.length, idx+kw.length+90);
+  return text.slice(start,end).trim();
+}
+
+function computeNaics(){
+  const combined = (state.company + " " + allSourceText()).toLowerCase();
+  const scores = {};
+  const evidence = {};
+  for(const code in NAICS_REF){
+    let score = 0, hit = null, hitSourceId=null, hitPage=null;
+    for(const kw of NAICS_REF[code].keywords){
+      if(combined.includes(kw)){
+        score++;
+        if(!hit){
+          for(const s of state.sources){
+            const h = findKeywordHit(s.fullText, kw);
+            if(h){ hit = h; hitSourceId = s.id;
+              const pg = s.pages.find(p=>p.text.toLowerCase().includes(kw));
+              hitPage = pg ? pg.num : null;
+              break;
+            }
+          }
+        }
+      }
+    }
+    scores[code]=score;
+    evidence[code]={hit,hitSourceId,hitPage};
+  }
+  const ranked = Object.keys(scores).sort((a,b)=>scores[b]-scores[a]);
+  let top = ranked[0];
+  // Chipotle-style default: if nothing matched at all, default candidate to 722513 (still show reasoning, not asserted blindly)
+  if(scores[top]===0){ top = "722513"; }
+  let second = ranked.find(c=>c!==top) || "722511";
+  if(top==="722513" && scores["722511"]===0 && ranked[1]) second = ranked[1];
+
+  const topEv = evidence[top] || {};
+  const secondEv = evidence[second] || {};
+
+  const citationFor = (code, ev) => {
+    if(ev.hitSourceId){
+      return {sourceId: ev.hitSourceId, page: ev.hitPage, excerpt: ev.hit, label: ev.hitPage ? `[${ev.hitSourceId}, p. ${ev.hitPage}]` : `[${ev.hitSourceId}]`};
+    }
+    return {sourceId: null, page: null, excerpt: NAICS_REF[code].def, label: "[Built-in NAICS Reference Library — 2022 NAICS Manual definition]"};
+  };
+
+  const rationale = scores[top] > 0
+    ? `Uploaded materials and/or the company description use language consistent with the Census definition of ${NAICS_REF[top].title} (${top}) — patrons order/select and pay before eating, matching phrases such as "${(topEv.hit||"").slice(0,80)}${(topEv.hit||"").length>80?"…":""}".`
+    : `No uploaded source text was matched to a specific NAICS keyword yet; ${top} — ${NAICS_REF[top].title} is proposed as the default candidate for a counter-service/fast-casual restaurant concept per the Census definition, pending confirmation from uploaded materials.`;
+
+  const rejection = `${second} — ${NAICS_REF[second].title} is defined by the Census Bureau as ${NAICS_REF[second].def.split(".")[0].toLowerCase()}. This does not match the ordering/payment/service model evidenced for ${state.company || "the company"}, so it was set aside in favor of ${top}.`;
+
+  return {
+    code: top,
+    title: NAICS_REF[top].title,
+    rationale,
+    citation: citationFor(top, topEv),
+    neighborCode: second,
+    neighborTitle: NAICS_REF[second].title,
+    neighborRejection: rejection,
+    neighborCitation: citationFor(second, secondEv),
+    censusDef: NAICS_REF[top].def
+  };
+}
+
+/* ============================= CANDIDATE EXTRACTION ============================= */
+function splitSentences(text){
+  return text.split(/(?<=[.!?])\s+(?=[A-Z0-9])|\n+/).map(s=>s.trim()).filter(s=>s.length>25 && s.length<600);
+}
+
+function extractCandidates(){
+  const out = {};
+  for(const sig of SIGNALS){
+    if(sig.key==="competitors") continue; // handled separately — see extractCompetitorCandidates()
+    const found = [];
+    const seen = new Set();
+    for(const src of state.sources){
+      for(const pg of src.pages){
+        const sentences = splitSentences(pg.text);
+        for(const sent of sentences){
+          const lower = sent.toLowerCase();
+          for(const kw of sig.keywords){
+            if(lower.includes(kw)){
+              const key = sent.slice(0,60);
+              if(seen.has(key)) continue;
+              seen.add(key);
+              const cand = {
+                id: uid(),
+                sourceId: src.id,
+                page: pg.num,
+                keyword: kw,
+                excerpt: sent.length>320 ? sent.slice(0,320)+"…" : sent,
+                included: found.length<3, // pre-check top 3 per signal
+                fields: {}
+              };
+              if(sig.key==="size"){ const m=moneyGuess(sent); cand.fields={amount:m.amount, unit:m.unit, year:yearGuess(sent)}; }
+              if(sig.key==="growth"){ cand.fields={rate:pctGuess(sent), horizon:yearGuess(sent)}; }
+              if(sig.key==="regulatory"){ cand.fields={label: kw, direction:"Increasing"}; }
+              if(sig.key==="supply"){ cand.fields={label: kw}; }
+              if(sig.key==="customer"){ cand.fields={label: kw}; }
+              found.push(cand);
+              break;
+            }
+          }
+          if(found.length>=8) break;
+        }
+        if(found.length>=8) break;
+      }
+    }
+    out[sig.key]=found;
+  }
+  out.competitors = extractCompetitorCandidates();
+  return out;
+}
+
+/* ============================= GAP DETECTION ============================= */
+function autoGaps(){
+  const gaps = [];
+  const c = state.candidates;
+  const anyIncluded = (arr)=>arr && arr.some(x=>x.included);
+  if(!anyIncluded(c.size)) gaps.push({missing:"Current industry revenue / market size", why:"No uploaded source contained a matched, confirmed statement of industry size.", resolve:"An IBISWorld or MarketResearch.com industry-at-a-glance page with total industry revenue."});
+  if(!anyIncluded(c.growth)) gaps.push({missing:"5-year historical growth rate or forecast", why:"No uploaded source contained a confirmed CAGR or growth-rate statement.", resolve:"IBISWorld 'Industry Performance' or 'Outlook' section with a stated annualized growth rate."});
+  if(!anyIncluded(c.competitors)) gaps.push({missing:"Exact market share for named competitors", why:"Uploaded reports did not provide a confirmed company-level market-share figure.", resolve:"A 'Major Companies' / competitive-landscape table from IBISWorld or MarketResearch.com."});
+  if(!anyIncluded(c.regulatory)) gaps.push({missing:"Specific regulatory/compliance pressures", why:"No uploaded source contained a confirmed regulatory statement.", resolve:"A trade-association or IBISWorld 'Regulation' section, or a 10-K risk-factors section."});
+  if(!anyIncluded(c.supply)) gaps.push({missing:"Supply-chain concentration evidence", why:"No uploaded source contained confirmed supplier/commodity detail.", resolve:"A 10-K 'Supply Chain' note or IBISWorld 'Supply Chain' section."});
+  if(!anyIncluded(c.customer)) gaps.push({missing:"Customer structure evidence", why:"No uploaded source contained confirmed demand-side detail.", resolve:"IBISWorld 'Products & Markets' or 'Demand Determinants' section."});
+  if(!anyIncluded(c.trend)) gaps.push({missing:"A confirmed 5-year trend", why:"No uploaded source contained a confirmed forward-looking trend statement.", resolve:"IBISWorld 'Industry Outlook' or a trade publication trend report."});
+  if(!anyIncluded(c.threat)) gaps.push({missing:"A confirmed leading threat", why:"No uploaded source contained a confirmed risk/threat statement.", resolve:"A 10-K 'Risk Factors' section or IBISWorld 'Industry Threats & Opportunities'."});
+  return gaps;
+}
+
+/* ============================= RENDER ============================= */
+const app = document.getElementById("app");
+
+function setStep(n){
+  if(n>0 && state.sources.length===0 && n>=3){ /* still allow navigation, just warn softly */ }
+  state.step = n;
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function stepAvailable(n){
+  if(n<=2) return true;
+  if(n===3) return state.sources.length>0 || state.naics!==null;
+  if(n>=4) return state.candidates!==null;
+  return true;
+}
+
+function render(){
+  app.innerHTML = `
+    ${renderMasthead()}
+    ${renderStepper()}
+    <div>${renderStepBody()}</div>
+  `;
+  wireEvents();
+}
+
+function renderMasthead(){
+  return `
+  <div class="masthead">
+    <div class="brand">
+      <div class="brand-mark">IIP</div>
+      <div>
+        <h1>Industry Intelligence Pipeline</h1>
+        <p>Structured, source-traced industry briefs from your uploaded research — nothing asserted without a citation.</p>
+      </div>
+    </div>
+    <button class="btn ghost no-print" id="themeToggle" type="button">Toggle theme</button>
+  </div>`;
+}
+
+function renderStepper(){
+  return `<div class="stepper no-print">
+    ${STEPS.map((label,i)=>{
+      const active = i===state.step;
+      const done = i<state.step;
+      const disabled = !stepAvailable(i) && i>state.step;
+      return `<button class="step-btn ${active?"active":""} ${done?"done":""}" data-step="${i}" ${disabled?"disabled":""}>
+        <span class="n">STEP ${i+1}</span><span class="t">${label}</span>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+function renderStepBody(){
+  switch(state.step){
+    case 0: return stepCompany();
+    case 1: return stepNaics();
+    case 2: return stepSources();
+    case 3: return stepAnalyze();
+    case 4: return stepBrief();
+    case 5: return stepExport();
+    default: return "";
+  }
+}
+
+/* ---------- STEP 0: Company ---------- */
+function stepCompany(){
+  return `
+  <div class="card">
+    <span class="section-label">Company</span>
+    <h2>Which company is this brief for?</h2>
+    <p class="desc">Enter a company and provide industry research. The pipeline identifies the appropriate NAICS industry and extracts structured competitive, regulatory, supply chain, customer, trend, and threat intelligence.</p>
+    <label class="field-label">Company name</label>
+    <input type="text" id="companyInput" value="${esc(state.company)}" placeholder="e.g. Chipotle Mexican Grill" />
+    <div class="btn-row">
+      <button class="btn big" id="startBtn" type="button">Start Industry Analysis →</button>
+    </div>
+  </div>
+  <div class="card">
+    <span class="section-label">How this works</span>
+    <ol style="margin:0;padding-left:20px;font-size:13.5px;color:var(--ink-soft);">
+      <li>Determine the NAICS industry code from uploaded Census documentation and the company's business description.</li>
+      <li>Upload IBISWorld, MarketResearch.com, Census, and supplemental sources (10-K, SEC filings, trade reports).</li>
+      <li>The tool scans every uploaded page for evidence on 7 required signals and shows you the matching excerpts — you confirm what's included.</li>
+      <li>Generate a cited Industry Intelligence Brief with an Evidence Gaps table for anything not found.</li>
+      <li>Export as Markdown, JSON, or print/PDF.</li>
+    </ol>
+  </div>`;
+}
+
+/* ---------- STEP 1: NAICS ---------- */
+function stepNaics(){
+  if(!state.naics) state.naics = computeNaics();
+  const n = state.naics;
+  return `
+  <div class="card">
+    <span class="section-label">Step 1</span>
+    <h2>Determine Industry &amp; NAICS Code</h2>
+    <p class="desc">Based on the company's primary business activity, Census NAICS definitions, and any uploaded materials — including neighboring classifications considered and rejected.</p>
+
+    <div class="row">
+      <div>
+        <label class="field-label">Selected NAICS code</label>
+        <input type="text" class="mono-field" id="naicsCode" value="${esc(n.code)}"/>
+      </div>
+      <div>
+        <label class="field-label">Industry title</label>
+        <input type="text" id="naicsTitle" value="${esc(n.title)}"/>
+      </div>
+    </div>
+    <label class="field-label" style="margin-top:12px;">Why this code fits ${citeBadge(n.citation)}</label>
+    <textarea id="naicsRationale">${esc(n.rationale)}</textarea>
+
+    <hr class="hr"/>
+    <div class="row">
+      <div>
+        <label class="field-label">Neighboring code considered</label>
+        <input type="text" class="mono-field" id="naicsNeighborCode" value="${esc(n.neighborCode)}"/>
+      </div>
+      <div>
+        <label class="field-label">Neighboring title</label>
+        <input type="text" id="naicsNeighborTitle" value="${esc(n.neighborTitle)}"/>
+      </div>
+    </div>
+    <label class="field-label" style="margin-top:12px;">Why it was rejected ${citeBadge(n.neighborCitation)}</label>
+    <textarea id="naicsRejection">${esc(n.neighborRejection)}</textarea>
+
+    <p class="small" style="margin-top:14px;">Census definition on file for ${esc(n.code)}: <em>${esc(n.censusDef)}</em></p>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="recomputeNaics" type="button">Re-run classification from sources</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="section-label">Optional</span>
+    <h2>Add Census / NAICS documentation now</h2>
+    <p class="desc">Upload the Census 2022 NAICS Manual or another NAICS reference PDF/TXT — the classification above will re-cite directly to it once uploaded in Step 2. You can also jump ahead and upload it there.</p>
+    <div class="upload-box" style="max-width:340px;">
+      <h4>Census / NAICS Documentation</h4>
+      <p>PDF or TXT</p>
+      <input type="file" id="censusQuickUpload" accept=".pdf,.txt"/>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn ghost" data-nav="0" type="button">← Back</button>
+    <button class="btn" data-nav="2" type="button">Continue to Sources →</button>
+  </div>`;
+}
+
+function citeBadge(c){
+  if(!c) return "";
+  return `<span class="badge outline">${esc(c.label)}</span>`;
+}
+
+/* ---------- STEP 2: Sources ---------- */
+function uploadBox(id, title, hint, category){
+  return `<div class="upload-box">
+    <h4>${title}</h4>
+    <p>${hint}</p>
+    <input type="file" id="${id}" data-category="${category}" accept=".pdf,.txt" ${category==='Supplemental'?'multiple':''}/>
+  </div>`;
+}
+
+function stepSources(){
+  return `
+  <div class="card">
+    <span class="section-label">Step 2</span>
+    <h2>Upload Industry Intelligence Sources</h2>
+    <p class="desc">Because IBISWorld and MarketResearch.com require institutional login, upload the reports directly as PDF or TXT. Every file becomes a numbered source (S1, S2, …) with editable metadata.</p>
+    <div class="upload-grid">
+      ${uploadBox("uploadIbis","A. IBISWorld Industry Report","PDF, TXT","IBISWorld")}
+      ${uploadBox("uploadMR","B. MarketResearch.com Industry Report","PDF, TXT","MarketResearch.com")}
+      ${uploadBox("uploadCensus","C. Census / NAICS Documentation","PDF, TXT","Census/NAICS")}
+      ${uploadBox("uploadSupp","D. Supplemental Sources (multiple)","10-K, SEC filings, trade reports, etc.","Supplemental")}
+    </div>
+    <p class="small" id="uploadStatus"></p>
+  </div>
+
+  <div class="card">
+    <span class="section-label">Source Library</span>
+    <h2>${state.sources.length} source${state.sources.length===1?"":"s"} uploaded</h2>
+    ${state.sources.length===0 ? `<p class="no-candidates">No sources uploaded yet. Add at least one report above to enable analysis.</p>` : renderSourceTable()}
+  </div>
+
+  <div class="btn-row">
+    <button class="btn ghost" data-nav="1" type="button">← Back</button>
+    <button class="btn" data-nav="3" type="button" ${state.sources.length===0?"disabled":""}>Continue to Analyze →</button>
+  </div>`;
+}
+
+function renderSourceTable(){
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Title</th><th>Publisher</th><th>Year</th><th>Type</th><th>URL (optional)</th><th>Pages</th><th>File</th><th></th></tr></thead>
+    <tbody>
+    ${state.sources.map(s=>`
+      <tr data-src="${s.id}">
+        <td><span class="badge">${s.id}</span></td>
+        <td><input type="text" class="src-field" data-field="title" data-src="${s.id}" value="${esc(s.title)}"/></td>
+        <td><input type="text" class="src-field" data-field="publisher" data-src="${s.id}" value="${esc(s.publisher)}"/></td>
+        <td><input type="text" class="src-field" data-field="year" data-src="${s.id}" value="${esc(s.year)}" style="width:70px;"/></td>
+        <td><input type="text" class="src-field" data-field="type" data-src="${s.id}" value="${esc(s.type)}"/></td>
+        <td><input type="text" class="src-field" data-field="url" data-src="${s.id}" value="${esc(s.url)}" placeholder="https://…"/></td>
+        <td>${s.pageCount}</td>
+        <td class="small">${esc(s.filename)}</td>
+        <td><button class="btn ghost removeSrc" data-src="${s.id}" type="button" style="padding:5px 9px;">Remove</button></td>
+      </tr>`).join("")}
+    </tbody>
+  </table></div>`;
+}
+
+/* ---------- STEP 3: Analyze ---------- */
+function stepAnalyze(){
+  if(!state.candidates){
+    return `
+    <div class="card">
+      <span class="section-label">Step 3</span>
+      <h2>Ready to analyze ${state.sources.length} source${state.sources.length===1?"":"s"}</h2>
+      <p class="desc">The pipeline scans every uploaded page for evidence tied to seven required signals. Nothing is included in the brief unless it is backed by a real excerpt you can review below.</p>
+      <div class="btn-row">
+        <button class="btn big" id="generateBtn" type="button">Generate Industry Brief</button>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn ghost" data-nav="2" type="button">← Back</button></div>`;
+  }
+  const totalIncluded = SIGNALS.reduce((a,s)=>a+state.candidates[s.key].filter(c=>c.included).length,0);
+  return `
+  <div class="card">
+    <span class="section-label">Step 3</span>
+    <h2>Review extracted evidence</h2>
+    <p class="desc">Each candidate below is a real excerpt found in an uploaded source. Confirm which ones support each signal in the final brief — unchecked items are left out. Adjust any auto-parsed field before continuing.</p>
+    <p class="small">${totalIncluded} item${totalIncluded===1?"":"s"} currently confirmed for inclusion across ${SIGNALS.length} signals.</p>
+  </div>
+  ${SIGNALS.map(sig=>renderSignalBlock(sig)).join("")}
+  <div class="btn-row">
+    <button class="btn ghost" data-nav="2" type="button">← Back to Sources</button>
+    <button class="btn ghost" id="regenerateBtn" type="button">Re-scan sources</button>
+    <button class="btn big" data-nav="4" type="button">Build Industry Brief →</button>
+  </div>`;
+}
+
+function renderSignalBlock(sig){
+  const list = state.candidates[sig.key];
+  return `<div class="card">
+    <span class="section-label">${sig.label}</span>
+    ${list.length===0 ? `<p class="no-candidates">Not found in uploaded sources — no matching evidence detected. This will appear in Evidence Gaps.</p>` :
+      list.map(c=>renderCandidate(sig, c)).join("")}
+    <button class="btn ghost addCandidate" data-sig="${sig.key}" type="button" style="margin-top:6px;">+ Add manual note with citation</button>
+  </div>`;
+}
+
+function extraFieldsHtml(sig, c){
+  if(sig.key==="size") return `
+    <div class="fields">
+      <div><label>Amount</label><input type="text" data-f="amount" value="${esc(c.fields.amount)}"/></div>
+      <div><label>Unit</label><input type="text" data-f="unit" value="${esc(c.fields.unit)}" placeholder="billion (USD)"/></div>
+      <div><label>Year</label><input type="text" data-f="year" value="${esc(c.fields.year)}"/></div>
+    </div>`;
+  if(sig.key==="growth") return `
+    <div class="fields">
+      <div><label>Growth rate (%)</label><input type="text" data-f="rate" value="${esc(c.fields.rate)}"/></div>
+      <div><label>Horizon / year</label><input type="text" data-f="horizon" value="${esc(c.fields.horizon)}"/></div>
+    </div>`;
+  if(sig.key==="competitors") return `
+    <div class="fields">
+      <div><label>Company</label><input type="text" data-f="company" value="${esc(c.fields.company)}" placeholder="Not identified — verify"/></div>
+      <div><label>Market share</label><input type="text" data-f="share" value="${esc(c.fields.shareStatus==='verified'? c.fields.share : '')}" placeholder="${c.fields.shareStatus==='verified'?'':'Unable to verify market share'}"/></div>
+      <div><label>Year</label><input type="text" data-f="year" value="${esc(c.fields.year)}"/></div>
+      <div><label>Confidence</label><input type="text" data-f="confidence" value="${esc(c.fields.confidence)}" readonly/></div>
+    </div>
+    ${c.warning ? `<p class="small" style="color:var(--red);margin-top:6px;">⚠ ${esc(c.warningText)}</p>` : ""}`;
+  if(sig.key==="regulatory") return `
+    <div class="fields">
+      <div><label>Pressure label</label><input type="text" data-f="label" value="${esc(c.fields.label)}"/></div>
+      <div><label>Direction</label><input type="text" data-f="direction" value="${esc(c.fields.direction)}" placeholder="Increasing / Stable / Easing"/></div>
+    </div>`;
+  return `<div class="fields"><div><label>Label</label><input type="text" data-f="label" value="${esc(c.fields.label||"")}"/></div></div>`;
+}
+
+function renderCandidate(sig, c){
+  const src = state.sources.find(s=>s.id===c.sourceId);
+  return `<div class="candidate" data-cid="${c.id}" data-sigkey="${sig.key}">
+    <div class="head">
+      <label class="chk"><input type="checkbox" class="candChk" ${c.included?"checked":""}/> ${esc(c.excerpt.slice(0,58))}${c.excerpt.length>58?"…":""}</label>
+      <span style="display:flex;gap:6px;align-items:center;">${c.warning?`<span class="tag gap" title="${esc(c.warningText||"")}">⚠ low confidence</span>`:""}<span class="badge outline">[${esc(c.sourceId)}, p. ${c.page}]</span></span>
+    </div>
+    <div class="excerpt">${esc(c.excerpt)}</div>
+    ${extraFieldsHtml(sig, c)}
+    <p class="small">Source: ${esc(src?src.title:c.sourceId)} · matched keyword “${esc(c.keyword)}”</p>
+  </div>`;
+}
+
+/* ---------- STEP 4: Brief ---------- */
+function stepBrief(){
+  state.briefDate = state.briefDate || new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+  const gaps = [...autoGaps(), ...state.extraGaps];
+  const c = state.candidates;
+  const included = key => c[key].filter(x=>x.included);
+
+  const sizeItems = included("size");
+  const growthItems = included("growth");
+  const compItems = included("competitors");
+  const regItems = included("regulatory");
+  const supplyItems = included("supply");
+  const custItems = included("customer");
+  const trendItems = included("trend");
+  const threatItems = included("threat");
+
+  return `
+  <div class="card" id="briefRoot">
+    <div class="brief-header">
+      <div class="co">Industry Intelligence Brief</div>
+      <div class="meta">
+        <b>Company:</b> ${esc(state.company)} &nbsp;·&nbsp;
+        <b>Industry:</b> ${esc(state.naics.title)} &nbsp;·&nbsp;
+        <b>NAICS:</b> ${esc(state.naics.code)} &nbsp;·&nbsp;
+        <b>Analysis date:</b> ${state.briefDate}
+      </div>
+    </div>
+
+    <h3>Executive Snapshot</h3>
+    <div class="exec-grid">
+      ${execCard("Industry size", sizeItems[0] ? fmtSize(sizeItems[0]) : "Not found in uploaded sources", sizeItems[0])}
+      ${execCard("5-year growth", growthItems[0] ? fmtGrowth(growthItems[0]) : "Not found in uploaded sources", growthItems[0])}
+      ${execCard("Market leader", compItems[0] ? (compItems[0].fields.company||"Not identified") + (compItems[0].fields.shareStatus==="verified" && compItems[0].fields.share?` — ${compItems[0].fields.share}%`:" — share unverified") : "Not found in uploaded sources", compItems[0])}
+      ${execCard("Supply-chain pressure", supplyItems.length? supplyAssessment(supplyItems).level : "Not found in uploaded sources", supplyItems[0])}
+      ${execCard("Customer structure", custItems[0] ? custItems[0].fields.label : "Not found in uploaded sources", custItems[0])}
+      ${execCard("Biggest trend", trendItems[0] ? trendItems[0].fields.label : "Not found in uploaded sources", trendItems[0])}
+      ${execCard("Biggest threat", threatItems[0] ? threatItems[0].fields.label : "Not found in uploaded sources", threatItems[0])}
+    </div>
+
+    <h3>NAICS Classification</h3>
+    <p><b>${esc(state.naics.code)}</b> — ${esc(state.naics.title)} ${citeBadge(state.naics.citation)}</p>
+    <p class="small">${esc(state.naics.rationale)}</p>
+    <p><b>Neighboring code considered:</b> ${esc(state.naics.neighborCode)} — ${esc(state.naics.neighborTitle)} ${citeBadge(state.naics.neighborCitation)}</p>
+    <p class="small">${esc(state.naics.neighborRejection)}</p>
+
+    <h3>1. Industry Size &amp; Growth</h3>
+    ${renderSizeGrowthTable(sizeItems, growthItems)}
+
+    <h3>2. Competitive Landscape</h3>
+    ${renderCompetitorTable(compItems)}
+
+    <h3>3. Regulatory &amp; Compliance Pressure</h3>
+    ${renderQualTable(regItems, ["label","direction"], ["Pressure","Direction"])}
+
+    <h3>4. Supply Chain</h3>
+    ${renderSupplyChain(supplyItems)}
+
+    <h3>5. Customer Structure</h3>
+    ${renderQualTable(custItems, ["label"], ["Customer signal"])}
+
+    <h3>6. Biggest Five-Year Trend</h3>
+    ${renderSingleQual(trendItems)}
+
+    <h3>7. Biggest Threat</h3>
+    ${renderSingleQual(threatItems)}
+
+    <h3>Evidence Gaps &amp; Limitations</h3>
+    ${renderGapsTable(gaps)}
+    <div class="btn-row no-print">
+      <input type="text" id="newGapMissing" placeholder="Missing information" style="max-width:220px;"/>
+      <input type="text" id="newGapWhy" placeholder="Why it could not be determined" style="max-width:260px;"/>
+      <input type="text" id="newGapResolve" placeholder="What would resolve it" style="max-width:220px;"/>
+      <button class="btn ghost" id="addGapBtn" type="button">+ Add row</button>
+    </div>
+
+    <h3>Sources</h3>
+    ${renderSourceRegister()}
+
+    <h3>Methodology</h3>
+    <p class="small">
+      <b>1. NAICS classification</b> — the tool cross-referenced the company description and every uploaded source against Census NAICS definitions (either an uploaded Census/NAICS document or a built-in reference of common restaurant-industry codes), scoring keyword matches per code and selecting the best-supported code, with the next-best code shown as a rejected neighbor.<br/>
+      <b>2. Parsing uploaded reports</b> — PDFs are parsed page-by-page in the browser (no server upload); TXT files are chunked into ~3,500-character pseudo-pages. Every sentence is scanned for signal-specific keywords (industry size, growth, competitors, regulation, supply chain, customers, trend, threat).<br/>
+      <b>3. Reconciling evidence</b> — when more than one source reports a conflicting figure for the same signal, both are shown side by side as a flagged discrepancy rather than one being silently chosen.<br/>
+      <b>4. Selecting the trend/threat</b> — the single highest-confidence matched excerpt for each is used; if the analyst judges a different excerpt is more central, they can re-order which candidate is checked in Step 3.<br/>
+      <b>5. Handling missing data</b> — any required signal with no confirmed candidate is listed under Evidence Gaps rather than filled with an invented figure.<br/>
+      <b>Market-share classification</b> — competitor percentages are not assigned from a single fixed pattern. Every percentage near a competitor mention is scored against nearby share-indicating language (e.g. "market share", "share of industry revenue") versus other-metric language (e.g. "same-store sales", "revenue growth", "margin"); it is only reported as market share when share language is closest and a company name is explicitly linked to it (e.g. "X holds…", "X accounts for…"). Otherwise the entry is marked <em>Unable to verify market share</em> and flagged with a low-confidence warning rather than guessed.
+    </p>
+    <p class="tag interp">Distinguishing fact vs. calculation vs. interpretation: <span class="tag fact">fact</span> = directly quoted/paraphrased from a source, <span class="tag calc">calc</span> = a number computed from source inputs (formula shown), <span class="tag interp">interp</span> = analyst interpretation layered on top of cited evidence.</p>
+  </div>
+  <div class="btn-row no-print">
+    <button class="btn ghost" data-nav="3" type="button">← Back to Analyze</button>
+    <button class="btn big" data-nav="5" type="button">Continue to Export →</button>
+  </div>`;
+}
+
+function execCard(k,v,cand){
+  return `<div class="exec-card"><div class="k">${k}</div><div class="v">${esc(String(v))}</div>${cand?citeSpan(cand):`<span class="tag gap">not found</span>`}</div>`;
+}
+function citeSpan(c){ return `<span class="cite" data-cid="${c.id}">[${esc(c.sourceId)}, p. ${c.page}]</span>`; }
+
+function fmtSize(item){
+  const f = item.fields;
+  if(f.amount && f.unit) return `$${f.amount} ${f.unit}${f.year?` (${f.year})`:""}`;
+  return "See excerpt — amount not auto-parsed";
+}
+function fmtGrowth(item){
+  const f = item.fields;
+  if(f.rate) return `${f.rate}%${f.horizon?` (${f.horizon})`:""}`;
+  return "See excerpt — rate not auto-parsed";
+}
+
+function renderSizeGrowthTable(sizeItems, growthItems){
+  if(sizeItems.length===0 && growthItems.length===0){
+    return `<p class="no-candidates">Not found in uploaded sources.</p>`;
+  }
+  let discrepancy = "";
+  if(sizeItems.length>1){
+    const amounts = sizeItems.map(i=>i.fields.amount).filter(Boolean);
+    const distinct = [...new Set(amounts)];
+    if(distinct.length>1){
+      discrepancy = `<div class="discrepancy"><b>Source discrepancy:</b> uploaded sources report different industry-size figures (${sizeItems.map(i=>`${esc(i.sourceId)}: $${esc(i.fields.amount||"?")} ${esc(i.fields.unit||"")}`).join("; ")}). This may reflect differing industry definitions, geographic scope, or measurement dates between reports.</div>`;
+    }
+  }
+  return `${discrepancy}<div class="table-wrap"><table>
+    <thead><tr><th>Metric</th><th>Value</th><th>Year</th><th>Type</th><th>Citation</th></tr></thead>
+    <tbody>
+    ${sizeItems.map(i=>`<tr><td>Industry size/revenue</td><td>${fmtSize(i)}</td><td>${esc(i.fields.year||"—")}</td><td><span class="tag fact">fact</span></td><td>${citeSpan(i)}</td></tr>`).join("")}
+    ${growthItems.map(i=>`<tr><td>5-yr growth / CAGR</td><td>${fmtGrowth(i)}</td><td>${esc(i.fields.horizon||"—")}</td><td><span class="tag fact">fact</span></td><td>${citeSpan(i)}</td></tr>`).join("")}
+    </tbody></table></div>
+  <p class="small">Interpretation <span class="tag interp">interp</span>: ${
+    growthItems.length ? "Uploaded sources indicate the industry is in a growth phase over the stated horizon; direction of the reported rate (positive vs. negative) should be checked against the excerpt above before citing in written work." :
+    "Growth direction (growing / flat / declining) is not asserted because no confirmed growth-rate evidence was found."
+  }</p>`;
+}
+
+function renderCompetitorTable(items){
+  if(items.length===0) return `<p class="no-candidates">Not found in uploaded sources — no competitor/market-share evidence detected.</p>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Company</th><th>Market share</th><th>Confidence</th><th>Year</th><th>Limitations</th><th>Citation</th></tr></thead>
+    <tbody>
+    ${items.map(i=>{
+      const verified = i.fields.shareStatus==="verified" && i.fields.share;
+      return `<tr>
+      <td>${esc(i.fields.company)||"Not identified — verify manually"}</td>
+      <td>${verified ? i.fields.share+"%" : "<em>Unable to verify market share</em>"}</td>
+      <td><span class="tag ${i.fields.confidence==='high'?'fact':(i.fields.confidence==='medium'?'calc':'gap')}">${esc(i.fields.confidence||"low")}</span></td>
+      <td>${esc(i.fields.year||"—")}</td>
+      <td class="small">${i.warning ? `<span style="color:var(--red);">⚠ ${esc(i.warningText)}</span>` : "Surrounding text explicitly ties this percentage to market/industry share and to the named company."}</td>
+      <td>${citeSpan(i)}</td>
+    </tr>`;}).join("")}
+    </tbody></table></div>
+  <p class="small">Classification method <span class="tag interp">interp</span>: each percentage found near a competitor mention is checked against share-indicating language (e.g. "market share", "share of industry revenue") versus other-metric language (e.g. "same-store sales", "revenue growth", "margin"). A percentage is only reported as market share when share language sits closest to it; otherwise it is marked <em>Unable to verify market share</em> rather than assigned to a company.</p>`;
+}
+
+function renderQualTable(items, fieldKeys, labels){
+  if(items.length===0) return `<p class="no-candidates">Not found in uploaded sources.</p>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr>${labels.map(l=>`<th>${l}</th>`).join("")}<th>Why it matters</th><th>Citation</th></tr></thead>
+    <tbody>
+    ${items.map(i=>`<tr>
+      ${fieldKeys.map(fk=>`<td>${esc(i.fields[fk]||"—")}</td>`).join("")}
+      <td class="small"><span class="tag interp">interp</span> ${genericWhy(i)}</td>
+      <td>${citeSpan(i)}</td>
+    </tr>`).join("")}
+    </tbody></table></div>`;
+}
+
+function genericWhy(item){
+  return `Flagged from the phrase "${esc(item.excerpt.slice(0,70))}${item.excerpt.length>70?"…":""}" — review the full excerpt in the Evidence panel for context before relying on this in written analysis.`;
+}
+
+function supplyAssessment(items){
+  if(items.length===0) return {level:"Not found", frag:"Not found"};
+  const level = items.length>=3 ? "Moderate–High" : "Moderate";
+  return {level, frag: level};
+}
+function renderSupplyChain(items){
+  if(items.length===0) return `<p class="no-candidates">Not found in uploaded sources.</p>`;
+  const a = supplyAssessment(items);
+  return `${renderQualTable(items, ["label"], ["Signal"])}
+  <p class="small"><b>Supply-chain concentration:</b> ${a.level} <span class="tag interp">interp</span> &nbsp; <b>Fragility:</b> ${a.frag} <span class="tag interp">interp</span><br/>
+  Basis: ${items.length} confirmed excerpt${items.length===1?"":"s"} referencing suppliers, commodities, or logistics (see citations above). This rating is a qualitative read of the checked evidence, not a computed index — adjust it if the underlying excerpts don't support it.</p>`;
+}
+
+function renderSingleQual(items){
+  if(items.length===0) return `<p class="no-candidates">Not found in uploaded sources.</p>`;
+  const i = items[0];
+  return `<p><b>${esc(i.fields.label||"See excerpt")}</b> ${citeSpan(i)}</p>
+  <p class="small">Evidence: "${esc(i.excerpt)}"<br/>
+  <span class="tag interp">interp</span> Time horizon: approximately five years, per the framing of the source excerpt above. Expected direction of impact and why it matters to the industry should be filled in by the analyst based on the full excerpt (see Evidence panel), since the tool does not infer causal impact beyond what is stated.</p>`;
+}
+
+function renderGapsTable(gaps){
+  if(gaps.length===0) return `<p class="small">No outstanding gaps — every required signal has at least one confirmed, cited item.</p>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Missing information</th><th>Why it could not be determined</th><th>What would resolve it</th><th></th></tr></thead>
+    <tbody>
+    ${gaps.map((g,idx)=>`<tr><td>${esc(g.missing)}</td><td class="small">${esc(g.why)}</td><td class="small">${esc(g.resolve)}</td>
+      <td>${g.custom? `<button class="btn ghost removeGap no-print" data-idx="${idx-autoGaps().length}" type="button" style="padding:4px 8px;">×</button>`:""}</td></tr>`).join("")}
+    </tbody></table></div>`;
+}
+
+function renderSourceRegister(){
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Title</th><th>Publisher</th><th>Year</th><th>Type</th><th>Pages</th><th>URL</th></tr></thead>
+    <tbody>
+    ${state.sources.map(s=>`<tr><td><span class="badge">${s.id}</span></td><td>${esc(s.title)}</td><td>${esc(s.publisher)}</td><td>${esc(s.year||"—")}</td><td>${esc(s.type)}</td><td>${s.pageCount}</td><td class="small">${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>`:"—"}</td></tr>`).join("")}
+    </tbody></table></div>`;
+}
+
+/* ---------- STEP 5: Export ---------- */
+function stepExport(){
+  return `
+  <div class="card">
+    <span class="section-label">Step 6</span>
+    <h2>Export the brief</h2>
+    <p class="desc">Copy the brief as Markdown for a paper, download the structured JSON for an appendix or further processing, or print/save as PDF directly from this page.</p>
+    <div class="btn-row">
+      <button class="btn big" id="copyMdBtn" type="button">Copy Markdown</button>
+      <button class="btn big ghost" id="downloadJsonBtn" type="button">Download JSON</button>
+      <button class="btn big ghost" id="printBtn" type="button">Print / Save as PDF</button>
+    </div>
+    <p class="small" id="exportStatus"></p>
+  </div>
+  <div class="card">
+    <span class="section-label">Preview</span>
+    <h2>Markdown preview</h2>
+    <textarea id="mdPreview" style="min-height:340px;font-family:'IBM Plex Mono',monospace;font-size:12px;" readonly>${esc(buildMarkdown())}</textarea>
+  </div>
+  <div class="btn-row"><button class="btn ghost" data-nav="4" type="button">← Back to Brief</button></div>`;
+}
+
+/* ============================= MARKDOWN / JSON BUILDERS ============================= */
+function buildMarkdown(){
+  const c = state.candidates;
+  const included = key => c[key].filter(x=>x.included);
+  const gaps = [...autoGaps(), ...state.extraGaps];
+  const n = state.naics;
+  let md = `# Industry Intelligence Brief\n\n`;
+  md += `**Company:** ${state.company}  \n**Industry:** ${n.title}  \n**NAICS:** ${n.code}  \n**Analysis date:** ${state.briefDate}\n\n`;
+  md += `## NAICS Classification\n\n- **Selected code:** ${n.code} — ${n.title}\n- **Why selected:** ${n.rationale} ${n.citation.label}\n- **Neighboring code considered:** ${n.neighborCode} — ${n.neighborTitle}\n- **Why rejected:** ${n.neighborRejection} ${n.neighborCitation.label}\n\n`;
+  md += `## 1. Industry Size & Growth\n\n`;
+  included("size").forEach(i=> md += `- ${fmtSize(i)} [${i.sourceId}, p. ${i.page}]\n`);
+  included("growth").forEach(i=> md += `- Growth: ${fmtGrowth(i)} [${i.sourceId}, p. ${i.page}]\n`);
+  if(included("size").length===0 && included("growth").length===0) md += `- Not found in uploaded sources.\n`;
+  md += `\n## 2. Competitive Landscape\n\n`;
+  included("competitors").forEach(i=>{
+    const shareTxt = (i.fields.shareStatus==="verified" && i.fields.share) ? i.fields.share+"%" : "Unable to verify market share";
+    const warnTxt = i.warning ? ` (⚠ ${i.warningText})` : "";
+    md += `- ${i.fields.company||"Not identified"} — ${shareTxt} (confidence: ${i.fields.confidence})${warnTxt} [${i.sourceId}, p. ${i.page}]\n`;
+  });
+  if(included("competitors").length===0) md += `- Not found in uploaded sources.\n`;
+  const qualSection = (title,key) => {
+    md += `\n## ${title}\n\n`;
+    const items = included(key);
+    if(items.length===0){ md+= `- Not found in uploaded sources.\n`; return; }
+    items.forEach(i=> md += `- ${i.fields.label||i.excerpt.slice(0,60)} [${i.sourceId}, p. ${i.page}]\n`);
+  };
+  qualSection("3. Regulatory & Compliance Pressure","regulatory");
+  qualSection("4. Supply Chain","supply");
+  qualSection("5. Customer Structure","customer");
+  qualSection("6. Biggest Five-Year Trend","trend");
+  qualSection("7. Biggest Threat","threat");
+  md += `\n## Evidence Gaps & Limitations\n\n| Missing information | Why it could not be determined | What would resolve it |\n|---|---|---|\n`;
+  gaps.forEach(g=> md += `| ${g.missing} | ${g.why} | ${g.resolve} |\n`);
+  md += `\n## Sources\n\n`;
+  state.sources.forEach(s=> md += `- [${s.id}] ${s.publisher || "Unknown publisher"} — ${s.title}${s.year?", "+s.year:""} (${s.filename}, ${s.pageCount} pages)\n`);
+  md += `\n## Methodology\n\nNAICS classification was determined by keyword-matching the company description and uploaded sources against Census NAICS definitions. Reports were parsed page-by-page in the browser and scanned for signal-specific keywords. Conflicting figures across sources are flagged as discrepancies rather than silently resolved. Any signal without a confirmed, cited excerpt is listed under Evidence Gaps rather than estimated.\n`;
+  return md;
+}
+
+function buildJson(){
+  const c = state.candidates;
+  const included = key => c[key].filter(x=>x.included).map(i=>({
+    excerpt:i.excerpt, fields:i.fields, citations:[`${i.sourceId}, p. ${i.page}`]
+  }));
+  const gaps = [...autoGaps(), ...state.extraGaps];
+  return {
+    company: state.company,
+    industry: state.naics.title,
+    naics: {
+      code: state.naics.code,
+      title: state.naics.title,
+      rationale: state.naics.rationale,
+      neighboring_code: state.naics.neighborCode,
+      rejection_rationale: state.naics.neighborRejection,
+      citations: [state.naics.citation.label, state.naics.neighborCitation.label]
+    },
+    industry_size: {items: included("size"), citations: included("size").flatMap(i=>i.citations)},
+    growth_trajectory: {items: included("growth"), citations: included("growth").flatMap(i=>i.citations)},
+    competitors: c.competitors.filter(x=>x.included).map(i=>({
+      company: i.fields.company || "Not identified",
+      market_share_percent: (i.fields.shareStatus==="verified" && i.fields.share) ? i.fields.share : null,
+      market_share_status: i.fields.shareStatus,
+      confidence: i.fields.confidence,
+      year: i.fields.year || null,
+      excerpt: i.excerpt,
+      validation_warning: i.warning ? (i.warningText||true) : null,
+      citations: [`${i.sourceId}, p. ${i.page}`]
+    })),
+    regulatory_pressure: included("regulatory"),
+    supply_chain: {items: included("supply"), citations: included("supply").flatMap(i=>i.citations)},
+    customers: {items: included("customer"), citations: included("customer").flatMap(i=>i.citations)},
+    five_year_trend: included("trend")[0] || {note:"Not found in uploaded sources"},
+    biggest_threat: included("threat")[0] || {note:"Not found in uploaded sources"},
+    evidence_gaps: gaps,
+    sources: state.sources.map(s=>({id:s.id,title:s.title,publisher:s.publisher,year:s.year,type:s.type,filename:s.filename,url:s.url,pageCount:s.pageCount})),
+    analysis_date: state.briefDate,
+    generated_by: "Industry Intelligence Pipeline (client-side, rule-based extraction — not an LLM)"
+  };
+}
+
+/* ============================= EVIDENCE MODAL ============================= */
+function openEvidence(cid){
+  let found=null, sig=null;
+  for(const s of SIGNALS){ const hit = state.candidates[s.key].find(c=>c.id===cid); if(hit){found=hit; sig=s; break;} }
+  if(!found){
+    if(state.naics.citation && state.naics.citation.excerpt){ found = state.naics.citation; }
+  }
+  const src = found ? state.sources.find(s=>s.id===found.sourceId) : null;
+  document.getElementById("evidenceBody").innerHTML = `
+    <p><b>Signal:</b> ${sig?sig.label:"NAICS classification"}</p>
+    <p><b>Source:</b> ${src? `${esc(src.id)} — ${esc(src.title)} (${esc(src.publisher)}${src.year?", "+esc(src.year):""})` : "Built-in NAICS Reference Library"}</p>
+    <p><b>Page:</b> ${found && found.page ? found.page : "n/a"}</p>
+    <div class="evidence-excerpt">${esc(found ? found.excerpt : "")}</div>`;
+  document.getElementById("evidenceModalBack").classList.add("open");
+}
+document.getElementById("evidenceClose").addEventListener("click",()=>document.getElementById("evidenceModalBack").classList.remove("open"));
+document.getElementById("evidenceModalBack").addEventListener("click",e=>{ if(e.target.id==="evidenceModalBack") e.currentTarget.classList.remove("open"); });
+
+/* ============================= EVENT WIRING ============================= */
+function wireEvents(){
+  document.getElementById("themeToggle")?.addEventListener("click", ()=>{
+    const html = document.documentElement;
+    html.setAttribute("data-theme", html.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  });
+
+  document.querySelectorAll("[data-nav]").forEach(b=> b.addEventListener("click", ()=> setStep(parseInt(b.dataset.nav))));
+  document.querySelectorAll(".step-btn").forEach(b=> b.addEventListener("click", ()=>{ if(!b.disabled) setStep(parseInt(b.dataset.step)); }));
+
+  // Step 0
+  document.getElementById("companyInput")?.addEventListener("input", e=>{ state.company = e.target.value; });
+  document.getElementById("startBtn")?.addEventListener("click", ()=> setStep(1));
+
+  // Step 1
+  document.getElementById("naicsCode")?.addEventListener("input", e=> state.naics.code = e.target.value);
+  document.getElementById("naicsTitle")?.addEventListener("input", e=> state.naics.title = e.target.value);
+  document.getElementById("naicsRationale")?.addEventListener("input", e=> state.naics.rationale = e.target.value);
+  document.getElementById("naicsNeighborCode")?.addEventListener("input", e=> state.naics.neighborCode = e.target.value);
+  document.getElementById("naicsNeighborTitle")?.addEventListener("input", e=> state.naics.neighborTitle = e.target.value);
+  document.getElementById("naicsRejection")?.addEventListener("input", e=> state.naics.neighborRejection = e.target.value);
+  document.getElementById("recomputeNaics")?.addEventListener("click", ()=>{ state.naics = computeNaics(); render(); });
+  document.getElementById("censusQuickUpload")?.addEventListener("change", async e=>{
+    const f = e.target.files[0]; if(!f) return;
+    await handleFileUpload(f,"Census/NAICS","U.S. Census Bureau");
+    state.naics = computeNaics();
+    render();
+  });
+
+  // Step 2 uploads
+  const bindUpload = (id, category, publisher)=>{
+    document.getElementById(id)?.addEventListener("change", async e=>{
+      const files = Array.from(e.target.files);
+      const statusEl = document.getElementById("uploadStatus");
+      if(statusEl) statusEl.textContent = "Processing "+files.length+" file(s)…";
+      for(const f of files){ await handleFileUpload(f, category, publisher); }
+      if(statusEl) statusEl.textContent = "";
+      render();
+    });
+  };
+  bindUpload("uploadIbis","IBISWorld","IBISWorld");
+  bindUpload("uploadMR","MarketResearch.com","MarketResearch.com");
+  bindUpload("uploadCensus","Census/NAICS","U.S. Census Bureau");
+  bindUpload("uploadSupp","Supplemental","");
+
+  document.querySelectorAll(".src-field").forEach(inp=>{
+    inp.addEventListener("input", e=>{
+      const src = state.sources.find(s=>s.id===e.target.dataset.src);
+      if(src) src[e.target.dataset.field] = e.target.value;
+    });
+  });
+  document.querySelectorAll(".removeSrc").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.sources = state.sources.filter(s=>s.id!==btn.dataset.src);
+      render();
+    });
+  });
+
+  // Step 3
+  document.getElementById("generateBtn")?.addEventListener("click", ()=>{
+    state.candidates = extractCandidates();
+    render();
+  });
+  document.getElementById("regenerateBtn")?.addEventListener("click", ()=>{
+    state.candidates = extractCandidates();
+    render();
+  });
+  document.querySelectorAll(".candChk").forEach(chk=>{
+    chk.addEventListener("change", e=>{
+      const wrap = e.target.closest(".candidate");
+      const sigKey = wrap.dataset.sigkey, cid = wrap.dataset.cid;
+      const cand = state.candidates[sigKey].find(c=>c.id===cid);
+      cand.included = e.target.checked;
+    });
+  });
+  document.querySelectorAll(".candidate .fields input").forEach(inp=>{
+    inp.addEventListener("input", e=>{
+      const wrap = e.target.closest(".candidate");
+      const sigKey = wrap.dataset.sigkey, cid = wrap.dataset.cid;
+      const cand = state.candidates[sigKey].find(c=>c.id===cid);
+      cand.fields[e.target.dataset.f] = e.target.value;
+      if(sigKey==="competitors" && e.target.dataset.f==="share"){
+        // a manual edit to the share value is an explicit human confirmation
+        cand.fields.shareStatus = e.target.value.trim() ? "verified" : "unable";
+        if(e.target.value.trim()) cand.warning = false;
+      }
+    });
+  });
+  document.querySelectorAll(".addCandidate").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const sigKey = btn.dataset.sig;
+      const firstSrc = state.sources[0];
+      state.candidates[sigKey].push({
+        id: uid(), sourceId: firstSrc?firstSrc.id:"S1", page:1, keyword:"manual",
+        excerpt:"Click to edit — paste the exact supporting excerpt here.", included:true, fields:{label:""}
+      });
+      render();
+    });
+  });
+
+  // Step 4
+  document.querySelectorAll(".cite").forEach(el=> el.addEventListener("click", ()=> openEvidence(el.dataset.cid)));
+  document.getElementById("addGapBtn")?.addEventListener("click", ()=>{
+    const m = document.getElementById("newGapMissing").value.trim();
+    const w = document.getElementById("newGapWhy").value.trim();
+    const r = document.getElementById("newGapResolve").value.trim();
+    if(!m) return;
+    state.extraGaps.push({missing:m, why:w||"Not specified.", resolve:r||"Not specified.", custom:true});
+    render();
+  });
+  document.querySelectorAll(".removeGap").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const idx = parseInt(btn.dataset.idx);
+      if(idx>=0){ state.extraGaps.splice(idx,1); render(); }
+    });
+  });
+
+  // Step 5
+  document.getElementById("copyMdBtn")?.addEventListener("click", async ()=>{
+    await navigator.clipboard.writeText(buildMarkdown());
+    document.getElementById("exportStatus").textContent = "Markdown copied to clipboard.";
+  });
+  document.getElementById("downloadJsonBtn")?.addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(buildJson(), null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = (state.company||"industry-brief").replace(/\s+/g,"_")+"_intelligence_brief.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById("exportStatus").textContent = "JSON downloaded.";
+  });
+  document.getElementById("printBtn")?.addEventListener("click", ()=>{
+    setStep(4);
+    setTimeout(()=>window.print(), 150);
+  });
+}
+
+/* ============================= INIT ============================= */
+render();
+</script>
+</body>
+</html>
